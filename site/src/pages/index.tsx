@@ -1,22 +1,11 @@
 import * as React from "react"
-import { Link, graphql, HeadFC, PageProps } from "gatsby"
+import { HeadFC, PageProps } from "gatsby"
 
-export default function IndexPage({
-  data: {
-    allPost: { nodes: posts },
-  },
-}: PageProps<Queries.IndexPageQuery>): React.ReactElement {
+export default function IndexPage({ data }: PageProps<any>): React.ReactElement {
   return (
     <main>
       <h1>All posts</h1>
-      <section className="posts-grid">
-        {posts.map((post) => (
-          <Link key={post.id} to={post.slug} className="posts-card">
-            <h2>{post.title}</h2>
-            <span>Author: {post.author.name}</span>
-          </Link>
-        ))}
-      </section>
+      <section className="posts-grid">Posts will go here</section>
     </main>
   )
 }
@@ -30,18 +19,3 @@ export const Head: HeadFC = () => (
     />
   </React.Fragment>
 )
-
-export const query = graphql`
-  query IndexPage {
-    allPost {
-      nodes {
-        id
-        slug
-        title
-        author {
-          name
-        }
-      }
-    }
-  }
-`
