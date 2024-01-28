@@ -8,7 +8,7 @@ export default function PostPage({
     return (
         <main>
             <h1>{post.title}</h1>
-            <p>Author: {post.author}</p>
+            <p>Author: {post.author.name}</p>
             <br />
             <Link to="/">Back to home page</Link>
         </main>
@@ -29,7 +29,9 @@ export const query = graphql`
     query PostPage($slug: String!){
         post(slug: {eq:$slug}){
             title
-            author
+            author{
+                name
+            }
         }
     }
 `

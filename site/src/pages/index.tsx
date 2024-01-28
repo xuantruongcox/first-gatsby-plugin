@@ -14,7 +14,7 @@ export default function IndexPage({
           posts.map((post)=>(
             <Link key={post.id} to={post.slug} className='posts-card'>
               <h2>{post.title}</h2>
-              <span>Author: {post.author}</span>
+              <span>Author: {post.author.name}</span>
             </Link>
           ))
         }
@@ -37,7 +37,9 @@ export const query = graphql`
         id
         slug
         title
-        author
+        author{
+          name
+        }
       }
     }
   }
