@@ -3,6 +3,8 @@ import { fetchGraphQL } from "./utils";
 import { IAuthorInput, IPostInput, NodeBuilderInput, IPluginOptionsInternal } from "./types";
 import { NODE_TYPES, ERROR_CODES, CACHE_KEYS } from "./constants";
 
+let isFirstSource = true;
+
 export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOptions: IPluginOptionsInternal) => {
     interface IApiResponse {
         data: {
@@ -14,11 +16,22 @@ export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOp
             locations: Array<unknown>
         }>
     }
-    const { reporter, cache } = gatsbyApi;
+    const { reporter, cache, actions, getNodes } = gatsbyApi;
+    const {touchNode} = actions
     const { endpoint } = pluginOptions;
 
     const sourcingTimer = reporter.activityTimer(`Sourcing from plugin API`);
     sourcingTimer.start();
+
+    if(isFirstSource){
+        getNodes().forEach(node=>{
+            if(node.internal.owner !== `plugin`) {
+                return
+            }
+            touchNode(node)
+        })
+        isFirstSource = false;
+    }
 
     const lastFetchedDate: number = await cache.get(CACHE_KEYS.Timestamp);
     const lastFetchedDateCurrent = Date.now();
