@@ -29,9 +29,8 @@ export interface IPostInput {
 
 interface IPluginOptionsKeys {
   // TODO: Set your plugin options here
-  [key: string]: any
+  endpoint: string
 }
-
 /**
  * Gatsby expects the plugin options to be of type "PluginOptions" for gatsby-node APIs (e.g. sourceNodes)
  */

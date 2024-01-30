@@ -26,6 +26,8 @@
     "node-fetch": "^2.6.8"
   },
   "devDependencies": {
+    "@types/common-tags": "^1",
+    "common-tags": "^1.8.2",
     "del-cli": "^5.0.0",
     "gatsby": "next",
     "typescript": "^4.9.4"
