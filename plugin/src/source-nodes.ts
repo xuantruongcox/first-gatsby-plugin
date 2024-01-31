@@ -1,6 +1,7 @@
 import type { GatsbyNode, SourceNodesArgs, NodeInput } from "gatsby";
 import { fetchGraphQL } from "./utils";
-import { IAuthorInput, IPostInput, NodeBuilderInput, IPluginOptionsInternal } from "./types";
+import { IAuthorInput, IPostInput, IPostImageInput, NodeBuilderInput, IPluginOptionsInternal } from "./types";
+import { IRemoteImageNodeInput } from 'gatsby-plugin-utils';
 import { NODE_TYPES, ERROR_CODES, CACHE_KEYS } from "./constants";
 
 let isFirstSource = true;
@@ -8,8 +9,12 @@ let isFirstSource = true;
 export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOptions: IPluginOptionsInternal) => {
     interface IApiResponse {
         data: {
-            posts: Array<IPostInput>
-            authors: Array<IAuthorInput>
+            postCollection: {
+                items: Array<IPostInput>
+            }
+            authorCollection: {
+                items: Array<IAuthorInput>
+            }
         }
         errors?: Array<{
             message: string
@@ -17,15 +22,15 @@ export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOp
         }>
     }
     const { reporter, cache, actions, getNodes } = gatsbyApi;
-    const {touchNode} = actions
-    const { endpoint } = pluginOptions;
+    const { touchNode } = actions
+    const { endpoint, accessToken } = pluginOptions;
 
     const sourcingTimer = reporter.activityTimer(`Sourcing from plugin API`);
     sourcingTimer.start();
 
-    if(isFirstSource){
-        getNodes().forEach(node=>{
-            if(node.internal.owner !== `plugin`) {
+    if (isFirstSource) {
+        getNodes().forEach(node => {
+            if (node.internal.owner !== `plugin`) {
                 return
             }
             touchNode(node)
@@ -38,27 +43,35 @@ export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOp
 
     reporter.verbose(`[plugin] Last fetched date: ${lastFetchedDate}`)
 
-    const { data, errors } = await fetchGraphQL<IApiResponse>(endpoint, `
-        query FetchApi{
-            posts{
-                id
-                slug
-                title
-                image {
-                    url
-                    alt
-                    width
-                    height
-                }
-                author
+    let { data, errors } = await fetchGraphQL<IApiResponse>(endpoint, `
+    query FetchApi {
+        postCollection {
+          items {
+            id
+            title
+            slug
+            image {
+              ... on PostImage {
+                url
+                alt
+                width
+                height
+              }
             }
-            authors {
-                id
-                name
-            }
+            author
+          }
         }
-    `);
-
+        authorCollection{
+          items{
+            id
+            name
+          }
+        }
+      }
+      
+    `, {
+        'Authorization': `Bearer ${accessToken}`
+    });
     if (errors) {
         sourcingTimer.panicOnBuild({
             id: ERROR_CODES.GraphQLSourcing,
@@ -72,12 +85,10 @@ export const sourceNodes: GatsbyNode[`sourceNodes`] = async (gatsbyApi, pluginOp
 
     await cache.set(CACHE_KEYS.Timestamp, lastFetchedDateCurrent)
 
-    const { posts = [], authors = [] } = data;
-
+    const { postCollection: { items: posts }, authorCollection: { items: authors } } = data;
     sourcingTimer.setStatus(`Process ${posts.length} posts and ${authors.length} authors`)
-
     for (const post of posts) {
-        nodeBuilder({ gatsbyApi, input: { type: NODE_TYPES.Post, data: post } })
+        nodeBuilder({ gatsbyApi, input: { type: NODE_TYPES.Post, data: post } });
     }
     for (const author of authors) {
         nodeBuilder({ gatsbyApi, input: { type: NODE_TYPES.Author, data: author } })
@@ -92,9 +103,15 @@ interface INodeBuilderArgs {
 
 export function nodeBuilder({ gatsbyApi, input }: INodeBuilderArgs) {
     const id = gatsbyApi.createNodeId(`${input.type}-${input.data.id}`)
+    const extraData: Record<string, unknown> = {};
 
+    if(input.type === 'contentfulPost'){
+        const assetId = createAssetNode(gatsbyApi, input.data.image);
+        extraData.image = assetId;
+    }
     const node = {
         ...input.data,
+        ...extraData,
         id,
         _id: input.data.id,
         parent: null,
@@ -107,4 +124,27 @@ export function nodeBuilder({ gatsbyApi, input }: INodeBuilderArgs) {
 
     gatsbyApi.actions.createNode(node)
 
+}
+
+export function createAssetNode(gatsbyApi: SourceNodesArgs, data: IPostImageInput){
+    const id = gatsbyApi.createNodeId(`${NODE_TYPES.Asset}-${data.url}`);
+
+    const assetNode = {
+        id,
+        url: data.url,
+        mimeType: `image/jpg`,
+        filename: data.url,
+        width: data.width,
+        height: data.height,
+        alt: data.alt,
+        placeholderUrl: `${data.url}&w=%width%&h=%height%`,
+        parent: null,
+        children: [],
+        internal: {
+            type: NODE_TYPES.Asset,
+            contentDigest: gatsbyApi.createContentDigest(data)
+        },
+    } satisfies IRemoteImageNodeInput;
+    gatsbyApi.actions.createNode(assetNode)
+    return id;
 }

@@ -1,21 +1,25 @@
 import * as React from "react";
 import { Link, graphql, PageProps, HeadFC } from 'gatsby';
-
+import { GatsbyImage, getImage } from "gatsby-plugin-image"
 
 export default function PostPage({
-    data: { post }
-}: PageProps<{ post: Queries.Post }>): React.ReactElement {
+    data: { contentfulPost:post }
+}: PageProps<{ contentfulPost: Queries.contentfulPost }>): React.ReactElement {
+    console.log(post)
     return (
         <main>
             <h1>{post.title}</h1>
             <p>Author: {post.author.name}</p>
             <br />
             <Link to="/">Back to home page</Link>
+            <div className="image">
+                <GatsbyImage alt={post.image.alt} image={getImage(post.image.gatsbyImage)}></GatsbyImage>
+            </div>
         </main>
     )
 }
 
-export const Head: HeadFC<{ post: Queries.Post }> = ({ data: { post } }) => (
+export const Head: HeadFC<{ contentfulPost: Queries.contentfulPost }> = ({ data: { contentfulPost:post } }) => (
     <React.Fragment>
         <title>{post.title}</title>
         <link
@@ -27,10 +31,14 @@ export const Head: HeadFC<{ post: Queries.Post }> = ({ data: { post } }) => (
 
 export const query = graphql`
     query PostPage($slug: String!){
-        post(slug: {eq:$slug}){
+        contentfulPost(slug: {eq:$slug}){
             title
             author{
                 name
+            }
+            image{
+                gatsbyImage(width: 300)
+                alt
             }
         }
     }

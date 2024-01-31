@@ -5,8 +5,6 @@ export type NodeBuilderInput =
 | {type: typeof NODE_TYPES.Author; data: IAuthorInput}
 | {type: typeof NODE_TYPES.Post; data: IPostInput}
 
-
-
 export interface IAuthorInput {
   id: number
   name: string
@@ -15,10 +13,9 @@ export interface IAuthorInput {
 export interface IPostImageInput {
   url: string
   alt: string
-  width: number
-  height: number
+  width: number|400
+  height: number|400
 }
-
 export interface IPostInput {
   id: number
   slug: string

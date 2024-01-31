@@ -11,7 +11,7 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
             slug: String!
             title: String!
             author: ${NODE_TYPES.Author} @link(by:"name")
-            image: ${NODE_TYPES.Post}Image!
+            image: ${NODE_TYPES.Asset} @link
         }
 
         type ${NODE_TYPES.Author} implements Node {
@@ -20,7 +20,7 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
             name: String!
         }
 
-        type ${NODE_TYPES.Post}Image {
+        type ${NODE_TYPES.Asset} implements Node & RemoteFile {
             url: String!
             alt: String!
             width: Int!

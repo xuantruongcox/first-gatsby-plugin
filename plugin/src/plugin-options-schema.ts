@@ -1,13 +1,15 @@
 import type { GatsbyNode } from "gatsby";
-import type {ObjectSchema} from "gatsby-plugin-utils";
+import type { ObjectSchema } from "gatsby-plugin-utils";
 
-export const pluginOptionsSchema: GatsbyNode["pluginOptionsSchema"] =  ({
+export const pluginOptionsSchema: GatsbyNode["pluginOptionsSchema"] = ({
     Joi,
-}): ObjectSchema =>{
+}): ObjectSchema => {
     return Joi.object({
         endpoint: Joi.string()
             .uri()
             .required()
-            .description(`The endpoint of your GraphQL API`)
+            .description(`The endpoint of your GraphQL API`),
+        accessToken: Joi.string()
+            .required()
     })
 }

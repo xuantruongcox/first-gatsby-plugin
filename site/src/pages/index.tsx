@@ -3,7 +3,7 @@ import {Link, graphql, HeadFC, PageProps} from 'gatsby';
 
 export default function IndexPage({
   data: {
-    allPost: {nodes:posts},
+    allContentfulPost: {nodes:posts},
   },
 }:PageProps<Queries.IndexPageQuery>): React.ReactElement {
   return (
@@ -31,8 +31,8 @@ export const Head: HeadFC = ()=>(
 )
 
 export const query = graphql`
-  query IndexxPage {
-    allPost{
+  query IndexPage {
+    allContentfulPost(sort: {_id:DESC}){
       nodes {
         id
         slug

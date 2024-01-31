@@ -1,6 +1,7 @@
 export const NODE_TYPES = {
-    Post: `Post`,
-    Author: `Author`
+    Post: `contentfulPost`,
+    Author: `contentfulAuthor`,
+    Asset: `Asset`
 } as const
 
 export const ERROR_CODES = {
